@@ -1,13 +1,19 @@
 name: architecture
 on:
   push: { branches: [main] }
+  pull_request:
   workflow_dispatch:
 jobs:
-  analyze:
+  arch:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
-      # mode: analyze only reads the repository and writes the Artifact. Nothing is sent.
+        with:
+          fetch-depth: 2 # mode: diff reads the pull request's head commit
       - uses: sketio-app/action@v1
+        with:
+          mode: ${{ github.event_name == 'pull_request' && 'diff' || 'sync' }}
+          api-url: https://arch.sketio.app
