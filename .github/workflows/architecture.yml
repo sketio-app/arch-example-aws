@@ -1,0 +1,13 @@
+name: architecture
+on:
+  push: { branches: [main] }
+  workflow_dispatch:
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      # mode: analyze only reads the repository and writes the Artifact. Nothing is sent.
+      - uses: sketio-app/action@v1

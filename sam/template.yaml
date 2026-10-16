@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: The same setup as ../terraform and ../cdk, written for SAM.
+
+Resources:
+  Uploads:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+
+  Orders:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: orderId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: orderId
+          KeyType: HASH
+
+  Jobs:
+    Type: AWS::SQS::Queue
+
+  Api:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs22.x
+      Handler: index.handler
+      CodeUri: ../dist/api/
+      Environment:
+        Variables:
+          TABLE: !Ref Orders
+          QUEUE_URL: !Ref Jobs
+          BUCKET: !Ref Uploads
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref Uploads
+        - DynamoDBWritePolicy:
+            TableName: !Ref Orders
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt Jobs.QueueName
+      Events:
+        Http:
+          Type: HttpApi
